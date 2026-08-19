@@ -9,5 +9,6 @@ etc/nginx/skylark/custom.conf
 images/production/skylark*
 
 app.local.env
+minio.local.env
 
 .env
