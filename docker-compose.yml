@@ -2,41 +2,39 @@ version: '3'
 services:
   db:
     container_name: 'slp_postgresql'
-    image: postgres:9.5-alpine
+    image: postgres:16-alpine
     env_file:
       - app.default.env
       - app.local.env
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
-      - ./etc/postgresql/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
     expose:
       - '5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d skylark_production"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     restart: on-failure:1
 
   redis:
     container_name: 'slp_redis'
-    image: redis:5.0.7-alpine
+    image: redis:7.4-alpine
     volumes:
       - ./data/redis:/data
-      - ./etc/redis/redis.conf:/usr/local/etc/redis/redis.conf
     expose:
       - '6379'
-    command: redis-server /usr/local/etc/redis/redis.conf
-    restart: on-failure:1
-
-  memcached:
-    container_name: 'slp_memcached'
-    image: memcached:1.5.1-alpine
-    expose:
-      - '11211'
     restart: on-failure:1
 
   elasticsearch:
     container_name: 'slp_elasticsearch'
-    image: fahchen/elasticsearch-analysis-ik:5.6.3-alpine
-    env_file:
-      - app.default.env
-      - app.local.env
+    image: bill1997603/elasticsearch-ik:8.19.20
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
     expose:
@@ -80,16 +78,15 @@ services:
     depends_on:
       - db
       - redis
-      - memcached
       - elasticsearch
     volumes:
       - ./config/cable.yml:/var/www/skylark/config/cable.yml
       - ./config/chewy.yml:/var/www/skylark/config/chewy.yml
       - ./config/database.yml:/var/www/skylark/config/database.yml
-      - ./config/puma.rb:/var/www/skylark/config/puma.rb
       - ./config/redis.yml:/var/www/skylark/config/redis.yml
       - ./config/secrets.yml:/var/www/skylark/config/secrets.yml
       - ./config/settings.yml:/var/www/skylark/config/settings.yml
+      - ./config/storage.yml:/var/www/skylark/config/storage.yml
       - ./config/sidekiq.yml:/var/www/skylark/config/sidekiq.yml
       - ./tmp:/var/www/skylark/tmp
       - ./log:/var/www/skylark/log
@@ -109,3 +106,24 @@ services:
     container_name: 'slp_sidekiq'
     command: bundle exec sidekiq -C config/sidekiq.yml -L /var/www/skylark/log/sidekiq.log
     expose: []
+
+  minio:
+    container_name: 'slp_minio'
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    env_file:
+      - minio.local.env
+    volumes:
+      - ./data/minio:/data
+    expose:
+      - '9000'
+      - '9001'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: on-failure:1

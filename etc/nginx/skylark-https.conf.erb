@@ -2,6 +2,10 @@ upstream app_backend {
   server app:3000;
 }
 
+upstream minio {
+  server minio:9000;
+}
+
 server {
   listen 80;
   server_name <%= ENV['NGINX_SERVER_NAME'] %>;
@@ -9,10 +13,9 @@ server {
 }
 
 server {
-  listen 443;
+  listen 443 ssl;
   server_name <%= ENV['NGINX_SERVER_NAME'] %>;
 
-  ssl on;
   ssl_certificate /etc/ssl/skylark.crt;
   ssl_certificate_key /etc/ssl/skylark.key;
   ssl_ciphers <%= ENV['NGINX_SSL_CIPHERS'] %>;

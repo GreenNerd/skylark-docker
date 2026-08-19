@@ -4,4 +4,4 @@ set -eu
 echo -n 'Enter username and press [ENTER]: '
 read username
 
-docker login --username=$username registry.cn-hangzhou.aliyuncs.com
+docker login --username="$username" registry.cn-hangzhou.aliyuncs.com

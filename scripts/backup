@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eux
 
-docker-compose exec db pg_dump -U $POSTGRES_USER -Ft -d skylark_production -f /var/lib/postgresql/data/$(date "+%Y%m%d")dump.tar
+docker-compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -Ft -d skylark_production -f /var/lib/postgresql/data/$(date +%Y%m%d)dump.tar'

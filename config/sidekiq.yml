@@ -3,10 +3,10 @@
 production:
   :concurrency: <%= ENV['SIDEKIQ_CONCURRENCY'] %>
 :queues:
-  - [push, 4]
-  - [high, 3]
-  - [middle, 2]
-  - [default, 2]
+  - [push, 10]
+  - [high, 8]
+  - [middle, 5]
+  - [default, 3]
   - [cache, 1]
   - [chewy, 1]
   - [webhook, 1]
