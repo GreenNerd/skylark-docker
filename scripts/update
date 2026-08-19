@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -eux
 
-docker-compose build
-docker-compose run app bundle exec rails db:migrate
-docker-compose run app bundle exec rails assets:precompile
-docker-compose up -d
+docker-compose pull
+docker-compose run --rm --no-deps app bundle exec rails db:migrate
+docker-compose run --rm --no-deps app bundle exec rails assets:precompile
+docker-compose up -d --no-deps --force-recreate app web sidekiq
+docker exec slp_web nginx -t && docker exec slp_web nginx -s reload
