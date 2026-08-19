@@ -10,6 +10,23 @@ defaults: &defaults
       authorization_callback_url: <%= ENV['SETTING_WECHAT_COMPONENT_AUTHORIZATION_CALLBACK_URL'] %>
       token: <%= ENV['SETTING_WECHAT_COMPONENT_TOKEN'] %>
 
+  storage:
+    write: <%= ENV['SETTING_STORAGE_WRITE'] || 'qiniu' %>  # qiniu | minio
+
+  minio:
+    endpoint: <%= ENV['SETTING_MINIO_ENDPOINT'] %>
+    public_endpoint: <%= ENV['SETTING_MINIO_PUBLIC_ENDPOINT'] %>
+    access_key: <%= ENV['SETTING_MINIO_ACCESS_KEY'] %>
+    secret_key: <%= ENV['SETTING_MINIO_SECRET_KEY'] %>
+    region: <%= ENV['SETTING_MINIO_REGION'] || 'us-east-1' %>
+    force_path_style: <%= ENV['SETTING_MINIO_FORCE_PATH_STYLE'] || true %>
+    imgproxy_url: <%= ENV['SETTING_MINIO_IMGPROXY_URL'] %>
+    buckets:
+      main: <%= ENV['SETTING_MINIO_BUCKET_MAIN'] %>
+      attachment: <%= ENV['SETTING_MINIO_BUCKET_ATTACHMENT'] %>
+      exportable_file: <%= ENV['SETTING_MINIO_BUCKET_EXPORTABLE_FILE'] %>
+      material: <%= ENV['SETTING_MINIO_BUCKET_MATERIAL'] %>
+
   qiniu:
     bucket: <%= ENV['SETTING_QINIU_BUCKET'] %>
     upload_url: <%= ENV['SETTING_QINIU_UPLOAD_URL'] %>
@@ -60,6 +77,7 @@ defaults: &defaults
     sms_service: <%= ENV['SETTING_APP_SMS_SERVICE'] %>
     welcome_page: <%= ENV['SETTING_APP_WELCOME_PAGE'] %>
     beian_code: <%= ENV['SETTING_APP_BEIAN_CODE'] %>
+    user_agent_for_mobile: <%= ENV['SETTING_APP_USER_AGENT_FOR_MOBILE'] %>
 
   exportable_file:
     max_cells: <%= ENV['SETTING_EXPORTABLE_FILE_MAX_CELLS'] %>
@@ -133,6 +151,11 @@ defaults: &defaults
   chuangli:
     appid: <%= ENV['SETTING_CHUANGLI_APPID'] %>
     secret: <%= ENV['SETTING_CHUANGLI_SECRET'] %>
+
+  v4:
+    login:
+      enable: <%= ENV['SETTING_V4_LOGIN_ENABLE'] %>
+      secret: <%= ENV['SETTING_V4_LOGIN_SECRET'] %>
 
 development:
   <<: *defaults
