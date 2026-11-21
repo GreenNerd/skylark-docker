@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -eux
+set -euo pipefail
 
-docker-compose pull
-docker-compose run --rm --no-deps app bundle exec rails db:create
-docker-compose run --rm --no-deps app bundle exec rails db:schema:load
-docker-compose run --rm --no-deps app bundle exec rails assets:precompile
+docker compose pull
+docker compose up -d --wait db redis elasticsearch rustfs
+docker compose run --rm --no-deps app bundle exec rails db:prepare
+docker compose run --rm --no-deps app bundle exec rails assets:precompile

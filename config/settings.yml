@@ -28,6 +28,7 @@ defaults: &defaults
       material: <%= ENV['SETTING_MINIO_BUCKET_MATERIAL'] %>
 
   qiniu:
+    disable_authorization: <%= ENV['SETTING_QINIU_DISABLE_AUTHORIZATION'] %>
     bucket: <%= ENV['SETTING_QINIU_BUCKET'] %>
     upload_url: <%= ENV['SETTING_QINIU_UPLOAD_URL'] %>
     domain: <%= ENV['SETTING_QINIU_DOMAIN'] %>
@@ -54,7 +55,6 @@ defaults: &defaults
         size: <%= ENV['SETTING_QINIU_MATERIAL_IMAGE_SIZE'] %>
 
   response:
-    async_import_min: <%= ENV['SETTING_RESPONSE_ASYNC_IMPORT_MIN'] %>
     async_export_min: <%= ENV['SETTING_RESPONSE_ASYNC_EXPORT_MIN'] %>
     file_expired_minutes: <%= ENV['SETTING_RESPONSE_FILE_EXPIRED_MINUTES'] %>
 
@@ -75,9 +75,12 @@ defaults: &defaults
     sentry_ruby_dsn: <%= ENV['SETTING_APP_SENTRY_RUBY_DSN'] %>
     sms_privoder: <%= ENV['SETTING_APP_SMS_PRIVODER'] %>
     sms_service: <%= ENV['SETTING_APP_SMS_SERVICE'] %>
-    welcome_page: <%= ENV['SETTING_APP_WELCOME_PAGE'] %>
+    welcome_page: <%= [ENV['SETTING_WELCOME_PAGE'], ENV['SETTING_APP_WELCOME_PAGE']].find { |value| !value.to_s.empty? } %>
     beian_code: <%= ENV['SETTING_APP_BEIAN_CODE'] %>
+    beian_register_tips: <%= ENV['SETTING_APP_BEIAN_REGISTER_TIPS'] %>
     user_agent_for_mobile: <%= ENV['SETTING_APP_USER_AGENT_FOR_MOBILE'] %>
+    tos_url: <%= ENV['SETTING_APP_TOS_URL'] %>
+    sms_minute_limit: <%= ENV['SETTING_APP_SMS_MINUTE_LIMIT'] %>
 
   exportable_file:
     max_cells: <%= ENV['SETTING_EXPORTABLE_FILE_MAX_CELLS'] %>
@@ -106,7 +109,7 @@ defaults: &defaults
     access_key_secret: <%= ENV['SETTING_ALIYUN_ACCESS_KEY_SECRET'] %>
     called_show_number: <%= ENV['SETTING_ALIYUN_CALLED_SHOW_NUMBER'] %>
     # true or false
-    with_product_var: <%= ENV['SETTING_ALIYUN_WITH_PRODUCT_VAR'] %>
+    with_product_var: <%= [ENV['SETTING_ALIYUN_WITH_PRODUCT_VAR'], ENV['SETTING_ALIYUN_SMS_WITH_PRODUCT_VAR']].find { |value| !value.to_s.empty? } %>
     tts_codes:
       message: <%= ENV['SETTING_ALIYUN_TTS_CODES_MESSAGE'] %>
       comment: <%= ENV['SETTING_ALIYUN_TTS_CODES_COMMENT'] %>
@@ -127,7 +130,7 @@ defaults: &defaults
           response_updated: <%= ENV['SETTING_ALIYUN_SMS_TEMPLATE_CODE_SUBSCRIPTION_RESPONSE_UPDATED'] %>
           organization_application: <%= ENV['SETTING_ALIYUN_SMS_TEMPLATE_CODE_SUBSCRIPTION_ORGANIZATION_APPLICATION'] %>
           bunch: <%= ENV['SETTING_ALIYUN_SMS_TEMPLATE_CODE_SUBSCRIPTION_BUNCH'] %>
-      ip_limit_per_day: <%= ENV['SETTING_ALIYUN_IP_LIMIT_PER_DAY'] %>
+      ip_limit_per_day: <%= [ENV['SETTING_ALIYUN_IP_LIMIT_PER_DAY'], ENV['SETTING_ALIYUN_SMS_IP_LIMIT_PER_DAY']].find { |value| !value.to_s.empty? } %>
 
   jwt:
     las_vegas: <%= ENV['SETTING_JWT_LAS_VEGAS'] %>
@@ -136,21 +139,14 @@ defaults: &defaults
     api_base: <%= ENV['SETTING_JUHE_API_BASE'] %>
     key: <%= ENV['SETTING_JUHE_KEY'] %>
 
-  dataos:
-    enable: <%= ENV['SETTING_DATAOS_ENABLE'] %>
-    domain: <%= ENV['SETTING_DATAOS_DOMAIN'] %>
-    key: <%= ENV['SETTING_DATAOS_KEY'] %>
-
   gxcloud:
     enable: <%= ENV['SETTING_GXCLOUD_ENABLE'] %>
 
-  table_mapper:
-    mapper_url: <%= ENV['SETTING_TABLE_MAPPER_MAPPER_URL'] %>
-    reset_url: <%= ENV['SETTING_TABLE_MAPPER_RESET_URL'] %>
- 
   chuangli:
     appid: <%= ENV['SETTING_CHUANGLI_APPID'] %>
     secret: <%= ENV['SETTING_CHUANGLI_SECRET'] %>
+
+  third_party_message_url: <%= ENV['THIRD_PARTY_MESSAGE_URL'] %>
 
   v4:
     login:

@@ -1,9 +1,10 @@
+<% require 'json' %>
 default: &default
   adapter: postgresql
   encoding: unicode
-  pool: <%= ENV['POSTGRES_POOL'] %>
+  max_connections: <%= ENV['POSTGRES_POOL'] %>
   username: <%= ENV['POSTGRES_USER'] %>
-  password: <%= ENV['POSTGRES_PASSWORD'] %>
+  password: <%= ENV.fetch('POSTGRES_PASSWORD', '').to_json %>
   host: <%= ENV['POSTGRES_HOST'] %>
   port: <%= ENV.fetch("POSTGRES_PORT", "5432") %>
 

@@ -5,10 +5,12 @@ shared/
 tmp/
 etc/ssl/
 etc/nginx/skylark/custom.conf
+etc/nginx/skylark/geoip/
 
 images/production/skylark*
 
 app.local.env
+rustfs.local.env
 minio.local.env
 
 .env

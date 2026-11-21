@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eux
 
-docker-compose up -d
+docker compose up -d

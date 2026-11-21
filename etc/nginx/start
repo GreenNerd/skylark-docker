@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -eux
+set -euo pipefail
 
-erb /tmp/skylark-$NGINX_SERVER_PROTO.conf.erb > /etc/nginx/conf.d/skylark.conf
-nginx -c /etc/nginx/nginx.conf
+protocol=${NGINX_SERVER_PROTO:-http}
+case "$protocol" in
+  http|https) ;;
+  *)
+    printf 'NGINX_SERVER_PROTO must be http or https (got %s)\n' "$protocol" >&2
+    exit 1
+    ;;
+esac
+
+erb "/tmp/skylark-$protocol.conf.erb" > /etc/nginx/conf.d/skylark.conf
+nginx -t -c /etc/nginx/nginx.conf
+exec nginx -c /etc/nginx/nginx.conf

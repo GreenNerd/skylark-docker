@@ -1,4 +1,7 @@
-version: '3'
+x-skylark-image: &skylark_image
+  image: registry.cn-hangzhou.aliyuncs.com/skylark/production:${SLP_VERSION:?Set SLP_VERSION in .env}
+  platform: ${SLP_PLATFORM:-linux/amd64}
+
 services:
   db:
     container_name: 'slp_postgresql'
@@ -11,7 +14,7 @@ services:
     expose:
       - '5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d skylark_production"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d skylark_production"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -37,20 +40,29 @@ services:
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=3s"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     expose:
       - '9200'
       - '9300'
     restart: on-failure:1
 
   web:
+    <<: *skylark_image
     container_name: 'slp_web'
-    image: registry.cn-hangzhou.aliyuncs.com/skylark/production:$SLP_VERSION
     env_file:
       - app.default.env
       - app.local.env
     depends_on:
-      - app
-      - sidekiq
+      app:
+        condition: service_started
+      sidekiq:
+        condition: service_started
+      rustfs:
+        condition: service_healthy
     command: /bin/bash /etc/nginx/start
     volumes:
       - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -71,14 +83,17 @@ services:
     restart: on-failure:1
 
   app: &app_base
-    image: registry.cn-hangzhou.aliyuncs.com/skylark/production:$SLP_VERSION
+    <<: *skylark_image
     env_file:
       - app.default.env
       - app.local.env
     depends_on:
-      - db
-      - redis
-      - elasticsearch
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
     volumes:
       - ./config/cable.yml:/var/www/skylark/config/cable.yml
       - ./config/chewy.yml:/var/www/skylark/config/chewy.yml
@@ -104,25 +119,35 @@ services:
   sidekiq:
     <<: *app_base
     container_name: 'slp_sidekiq'
-    command: bundle exec sidekiq -C config/sidekiq.yml -L /var/www/skylark/log/sidekiq.log
+    command: bundle exec sidekiq -C config/sidekiq.yml
     expose: []
 
-  minio:
-    container_name: 'slp_minio'
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
-    command: server /data --console-address ":9001"
+  rustfs:
+    image: rustfs/rustfs:1.0.6
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        if [ -z "$${RUSTFS_ACCESS_KEY:-}" ] || [ -z "$${RUSTFS_SECRET_KEY:-}" ] ||
+           [ "$$RUSTFS_ACCESS_KEY" = rustfsadmin ] || [ "$$RUSTFS_SECRET_KEY" = rustfsadmin ]; then
+          echo 'Set non-default RUSTFS_ACCESS_KEY and RUSTFS_SECRET_KEY in rustfs.local.env' >&2
+          exit 1
+        fi
+        exec /etc/rustfs/entrypoint.sh rustfs
     env_file:
-      - minio.local.env
+      - rustfs.local.env
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
     volumes:
-      - ./data/minio:/data
-    expose:
-      - '9000'
-      - '9001'
+      - ./data/rustfs:/data
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - "${RUSTFS_BIND_ADDRESS:-127.0.0.1}:${RUSTFS_API_PORT:-9000}:9000"
+      - "${RUSTFS_BIND_ADDRESS:-127.0.0.1}:${RUSTFS_CONSOLE_PORT:-9001}:9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health/ready"]
       interval: 10s
       timeout: 5s
       retries: 10

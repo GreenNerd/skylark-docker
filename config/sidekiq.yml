@@ -10,3 +10,4 @@ production:
   - [cache, 1]
   - [chewy, 1]
   - [webhook, 1]
+  - [mapper, 1]
