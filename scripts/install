@@ -3,5 +3,26 @@ set -euo pipefail
 
 docker compose pull
 docker compose up -d --wait db redis elasticsearch rustfs
+
+bucket_settings=$(docker compose run --rm --no-deps -T app sh -ec '
+  printf "%s\n" "${SETTING_MINIO_REGION:-us-east-1}" \
+    "${SETTING_MINIO_BUCKET_MAIN:?}" "${SETTING_MINIO_BUCKET_ATTACHMENT:?}" \
+    "${SETTING_MINIO_BUCKET_EXPORTABLE_FILE:?}" "${SETTING_MINIO_BUCKET_MATERIAL:?}"
+')
+
+docker compose exec -T rustfs sh -ec '
+  IFS= read -r region
+  RC_CONFIG_DIR=$(mktemp -d)
+  export RC_CONFIG_DIR
+  trap "rm -rf -- \"\$RC_CONFIG_DIR\"" EXIT
+
+  rc alias set --region "$region" --bucket-lookup path --quiet \
+    -- install http://127.0.0.1:9000 "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY"
+
+  while IFS= read -r bucket; do
+    rc bucket create "install/$bucket" --ignore-existing
+  done
+' <<< "$bucket_settings"
+
 docker compose run --rm --no-deps app bundle exec rails db:prepare
 docker compose run --rm --no-deps app bundle exec rails assets:precompile

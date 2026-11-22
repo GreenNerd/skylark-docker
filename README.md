@@ -45,13 +45,13 @@ docker compose config --quiet
 ./scripts/install
 ```
 
-阿里云镜像仓库要求认证时，先执行 `./scripts/login`。安装脚本拉取镜像，等待基础服务就绪，用 `db:prepare` 准备数据库并编译静态资源。
+阿里云镜像仓库要求认证时，先执行 `./scripts/login`。安装脚本拉取镜像，等待基础服务就绪，使用 RustFS 管理凭据创建应用所需的桶，然后用 `db:prepare` 准备数据库并编译静态资源。
 
 ## 配置 RustFS 和启动站点
 
 默认把新文件写到 RustFS。Skylark 镜像仍用 `SETTING_STORAGE_WRITE=minio`、`SETTING_MINIO_*` 和已有记录的 `storage_backend=minio` 标识 S3 后端。这些值对应 RustFS 的 S3 API，容器内地址为 `http://rustfs:9000`。
 
-1. 用 RustFS 控制台创建 `SETTING_MINIO_BUCKET_*` 对应的桶。默认桶名为 `slp-main`、`slp-attachment`、`slp-exportable` 和 `slp-material`。为 Skylark 配置有这些桶权限的 `SETTING_MINIO_ACCESS_KEY` 和 `SETTING_MINIO_SECRET_KEY`。若开始时使用管理凭据，创建应用专用凭据后可在 `app.local.env` 切换。
+1. `./scripts/install` 按 `SETTING_MINIO_BUCKET_*` 创建桶，已有桶会跳过。默认桶名为 `slp-main`、`slp-attachment`、`slp-exportable` 和 `slp-material`。如需自定义桶名，在运行安装脚本前通过 `app.local.env` 覆盖。为 Skylark 配置有这些桶权限的 `SETTING_MINIO_ACCESS_KEY` 和 `SETTING_MINIO_SECRET_KEY`。若开始时使用管理凭据，创建应用专用凭据后可在 `app.local.env` 切换。
 2. 将 `SETTING_MINIO_PUBLIC_ENDPOINT` 设为浏览器可达的站点地址加 `/s3`，例如 `https://skylark.example.com/s3`。客户端访问的域名必须和签名使用的域名一致。
 3. 启动站点并检查应用、后台任务和 Nginx 日志，再验证上传与下载。
 
